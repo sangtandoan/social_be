@@ -22,7 +22,7 @@ func main() {
 		log.Panic("Failed to connect to database: ", err)
 	}
 
-	db.Close()
+	defer db.Close()
 	fmt.Println("database connected")
 
 	store := store.NewStore(db)

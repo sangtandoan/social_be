@@ -7,6 +7,7 @@ import (
 
 	"github.com/sangtandoan/social/internal/config"
 	"github.com/sangtandoan/social/internal/store"
+	"github.com/sangtandoan/social/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,15 +25,21 @@ func (a *application) mount() http.Handler {
 	{
 		v1 := api.Group("/v1")
 		{
-			v1.GET("/", func(c *gin.Context) {
-				c.JSON(http.StatusOK, gin.H{
-					"message": "OK",
-				})
-			})
+			a.setupPostRoutes(v1)
+			v1.GET("/feeds", a.getUserFeedHandler)
 		}
 	}
 
 	return r
+}
+
+func (a *application) setupPostRoutes(group *gin.RouterGroup) {
+	posts := group.Group("/posts")
+
+	posts.POST("", utils.MakeHandlerFunc(a.createPostHandler))
+	posts.PATCH("/:id", utils.MakeHandlerFunc(a.updatePostHandler))
+	posts.GET("/:id", utils.MakeHandlerFunc(a.getPostHandler))
+	posts.GET("", utils.MakeHandlerFunc(a.getPostsHandler))
 }
 
 func (a *application) run(mux http.Handler) error {
