@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -66,9 +67,8 @@ func (a *application) getPostsHandler(c *gin.Context) error {
 func (a *application) getUserFeedHandler(c *gin.Context) {
 	userID, ok := c.Request.Context().Value("userID").(int64)
 	if !ok {
-		// c.Error(errors.New("can not get userID from context"))
-		// return
-		userID = 1
+		c.Error(fmt.Errorf("userID not found in context"))
+		return
 	}
 
 	var req dto.UserFeedRequest

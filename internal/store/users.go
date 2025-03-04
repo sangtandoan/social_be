@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/sangtandoan/social/internal/models/dto"
 )
 
 type UsersStore struct {
@@ -18,8 +20,22 @@ type User struct {
 	ID        int64     `json:"id,omitempty"`
 }
 
-func (s *UsersStore) Create(c context.Context) error {
-	return nil
+func (s *UsersStore) Create(ctx context.Context, arg *dto.CreateUserRequest) (*User, error) {
+	executor := GetExecutor(ctx, s.db)
+	query := "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, password, created_at"
+
+	row := executor.QueryRowContext(ctx, query, arg.Username, arg.Email, arg.Password)
+
+	var user User
+	err := row.Scan(&user.ID, &user.Password, &user.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Username = arg.Username
+	user.Email = arg.Email
+
+	return &user, nil
 }
 
 func (s *UsersStore) GetByID(ctx context.Context, ID int64) (*User, error) {

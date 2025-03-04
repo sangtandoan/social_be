@@ -1,16 +1,21 @@
 package main
 
 import (
-	"fmt"
-	"log"
-
+	"github.com/go-playground/validator/v10"
 	"github.com/sangtandoan/social/internal/config"
 	"github.com/sangtandoan/social/internal/db"
 	"github.com/sangtandoan/social/internal/store"
+	"github.com/sangtandoan/social/internal/utils"
+	"go.uber.org/zap"
 )
 
 func main() {
 	config := config.LoadCfg()
+
+	utils.Log = zap.Must(zap.NewProduction()).Sugar()
+	defer utils.Log.Sync()
+
+	utils.Validator = validator.New()
 
 	db, err := db.New(
 		config.DbConfig.Addr,
@@ -19,11 +24,11 @@ func main() {
 		config.DbConfig.MaxLifeTime,
 	)
 	if err != nil {
-		log.Panic("Failed to connect to database: ", err)
+		utils.Log.Panic("Failed to connect to database: ", err)
 	}
 
 	defer db.Close()
-	fmt.Println("database connected")
+	utils.Log.Info("database connected")
 
 	store := store.NewStore(db)
 
@@ -31,5 +36,5 @@ func main() {
 
 	mux := app.mount()
 
-	log.Fatal(app.run(mux))
+	utils.Log.Fatal(app.run(mux))
 }

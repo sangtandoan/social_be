@@ -191,7 +191,6 @@ func (s *PostsStore) GetUserFeed(
 			p.id, p.user_id, p.title, p.content, p.created_at, p.tags,
 			u.username,
 			COUNT(c.id) as comments_count
-		FROM posts p
 		LEFT JOIN comments c ON c.post_id = p.id
 		LEFT JOIN users u ON u.id = p.user_id
 		JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1

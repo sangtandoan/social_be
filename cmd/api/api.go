@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sangtandoan/social/internal/config"
+	"github.com/sangtandoan/social/internal/middleware"
 	"github.com/sangtandoan/social/internal/store"
 	"github.com/sangtandoan/social/internal/utils"
 
@@ -21,7 +22,7 @@ func (a *application) mount() http.Handler {
 	r := gin.Default()
 
 	api := r.Group("/api")
-
+	api.Use(middleware.GlobalErrorHandler())
 	{
 		v1 := api.Group("/v1")
 		{
