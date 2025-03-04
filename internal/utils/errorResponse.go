@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	ErrInvalidJSON = NewApiError(http.StatusBadRequest, "invalid json format")
-	ErrNotFound    = NewApiError(http.StatusNotFound, "resource not found")
+	ErrInvalidJSON  = NewApiError(http.StatusBadRequest, "invalid json format")
+	ErrNotFound     = NewApiError(http.StatusNotFound, "resource not found")
+	ErrUnauthorized = NewApiError(http.StatusUnauthorized, "unauthorized")
 )
 
 type ApiError struct {

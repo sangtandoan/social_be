@@ -27,11 +27,20 @@ func (a *application) mount() http.Handler {
 		v1 := api.Group("/v1")
 		{
 			a.setupPostRoutes(v1)
+			a.setupUserRoutes(v1)
 			v1.GET("/feeds", a.getUserFeedHandler)
 		}
 	}
 
 	return r
+}
+
+func (a *application) setupUserRoutes(group *gin.RouterGroup) {
+	users := group.Group("/users")
+
+	users.POST("", a.createUserHandler)
+	users.PATCH("/activate", a.activateUserHandler)
+	users.POST("/login", a.loginHandler)
 }
 
 func (a *application) setupPostRoutes(group *gin.RouterGroup) {

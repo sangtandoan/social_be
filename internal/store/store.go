@@ -38,7 +38,9 @@ type Store struct {
 
 	Users interface {
 		Create(ctx context.Context, arg *dto.CreateUserRequest) (*User, error)
-		GetByID(ctx context.Context, ID int64) (*User, error)
+		GetByID(ctx context.Context, id int64) (*User, error)
+		GetByEmail(ctx context.Context, email string) (*User, error)
+		Activate(ctx context.Context, id int64) error
 	}
 
 	Followers interface {
@@ -48,6 +50,7 @@ type Store struct {
 
 	Invitations interface {
 		CreateInvitation(ctx context.Context, arg *params.CreateInvitationParams) error
+		GetUserIDFromInvitation(ctx context.Context, token string) (int64, error)
 	}
 
 	Tx Tx
@@ -65,7 +68,7 @@ func NewStore(db *sql.DB) *Store {
 
 type TxKey struct{}
 
-func (t *tx) WithTx(ctx context.Context, f func(ctx context.Context) error) error {
+func (t *tx) WithTx(ctx context.Context, f func(txCtx context.Context) error) error {
 	tx, err := t.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -79,6 +82,8 @@ func (t *tx) WithTx(ctx context.Context, f func(ctx context.Context) error) erro
 		if err := tx.Rollback(); err != nil {
 			panic("can not rollback")
 		}
+
+		return err
 	}
 
 	return tx.Commit()

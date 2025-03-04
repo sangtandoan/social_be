@@ -38,13 +38,14 @@ func (s *UsersStore) Create(ctx context.Context, arg *dto.CreateUserRequest) (*U
 	return &user, nil
 }
 
-func (s *UsersStore) GetByID(ctx context.Context, ID int64) (*User, error) {
+func (s *UsersStore) GetByID(ctx context.Context, id int64) (*User, error) {
+	executor := GetExecutor(ctx, s.db)
 	query := "SELECT id, username, email, password, created_at FROM users WHERE id = $1"
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeOut)
 	defer cancel()
 
-	row := s.db.QueryRowContext(ctx, query, ID)
+	row := executor.QueryRowContext(ctx, query, id)
 
 	var user User
 	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.CreatedAt)
@@ -53,4 +54,33 @@ func (s *UsersStore) GetByID(ctx context.Context, ID int64) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func (s *UsersStore) GetByEmail(ctx context.Context, email string) (*User, error) {
+	executor := GetExecutor(ctx, s.db)
+	query := "SELECT id, username, email, password, created_at FROM users WHERE email = $1"
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOut)
+	defer cancel()
+
+	row := executor.QueryRowContext(ctx, query, email)
+
+	var user User
+	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (s *UsersStore) Activate(ctx context.Context, id int64) error {
+	executor := GetExecutor(ctx, s.db)
+	query := "UPDATE users SET active = true WHERE id = $1"
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOut)
+	defer cancel()
+
+	_, err := executor.ExecContext(ctx, query, id)
+	return err
 }
