@@ -41,6 +41,7 @@ type Store struct {
 		GetByID(ctx context.Context, id int64) (*User, error)
 		GetByEmail(ctx context.Context, email string) (*User, error)
 		Activate(ctx context.Context, id int64) error
+		Delete(ctx context.Context, id int64) error
 	}
 
 	Followers interface {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -63,7 +62,7 @@ func (a *application) run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	fmt.Printf("Server starts on port %s", a.config.Addr)
+	utils.Log.Infof("server starts on port %s", a.config.Addr)
 
 	return srv.ListenAndServe()
 }

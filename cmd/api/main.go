@@ -13,7 +13,7 @@ import (
 func main() {
 	config := config.LoadCfg()
 
-	utils.Log = zap.Must(zap.NewProduction()).Sugar()
+	utils.Log = zap.Must(zap.NewDevelopment()).Sugar()
 	defer utils.Log.Sync()
 
 	utils.Validator = validator.New()

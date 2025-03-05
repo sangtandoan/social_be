@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/sangtandoan/social/internal/config"
 	"github.com/sangtandoan/social/internal/utils"
@@ -14,6 +15,7 @@ import (
 
 type Mailer interface {
 	Send(req *SendRequest) error
+	SendWithRetry(req *SendRequest, retries int) error
 }
 
 type TemplateOpt int
@@ -24,8 +26,8 @@ const (
 )
 
 type SendRequest struct {
-	To   []string
 	Data any
+	To   []string
 	Temp TemplateOpt
 }
 
@@ -52,6 +54,22 @@ func NewSMTPMailer(config *config.MailerConfig) *SMTPMailer {
 		config,
 		dialer,
 	}
+}
+
+// Retry mechanisim with expoential backoff
+func (m *SMTPMailer) SendWithRetry(req *SendRequest, retries int) error {
+	for i := range retries {
+		if err := m.Send(req); err != nil {
+			utils.Log.Warnf(" %d attempt to send email of %d", i+1, retries)
+
+			time.Sleep(time.Second * time.Duration((i + 1))) // exponential backoff
+			continue
+		}
+		utils.Log.Info("send email successfully")
+		return nil
+	}
+
+	return utils.NewApiError(http.StatusInternalServerError, "can not send email")
 }
 
 func (m *SMTPMailer) Send(req *SendRequest) error {

@@ -88,9 +88,12 @@ func (a *application) createUserHandler(c *gin.Context) {
 		},
 		Temp: service.ConfirmTemplate,
 	}
-	if err := a.mailer.Send(&emailReq); err != nil {
-		// TODO: implement retry mechanic
-		// TODO: implement sasga pattern
+
+	if err := a.mailer.SendWithRetry(&emailReq, 3); err != nil {
+		// implement saga pattern
+		if err := a.store.Users.Delete(c.Request.Context(), res.UserID); err != nil {
+			c.Error(err)
+		}
 		c.Error(err)
 		return
 	}

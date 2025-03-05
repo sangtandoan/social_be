@@ -74,6 +74,13 @@ func (s *UsersStore) GetByEmail(ctx context.Context, email string) (*User, error
 	return &user, nil
 }
 
+func (s *UsersStore) Delete(ctx context.Context, id int64) error {
+	query := "DELETE FROM users WHERE id = $1"
+
+	_, err := s.db.ExecContext(ctx, query, id)
+	return err
+}
+
 func (s *UsersStore) Activate(ctx context.Context, id int64) error {
 	executor := GetExecutor(ctx, s.db)
 	query := "UPDATE users SET active = true WHERE id = $1"
