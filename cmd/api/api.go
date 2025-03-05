@@ -7,6 +7,7 @@ import (
 
 	"github.com/sangtandoan/social/internal/config"
 	"github.com/sangtandoan/social/internal/middleware"
+	"github.com/sangtandoan/social/internal/service"
 	"github.com/sangtandoan/social/internal/store"
 	"github.com/sangtandoan/social/internal/utils"
 
@@ -16,6 +17,7 @@ import (
 type application struct {
 	config *config.Config
 	store  *store.Store
+	mailer service.Mailer
 }
 
 func (a *application) mount() http.Handler {

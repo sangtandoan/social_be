@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/sangtandoan/social/internal/config"
 	"github.com/sangtandoan/social/internal/db"
+	"github.com/sangtandoan/social/internal/service"
 	"github.com/sangtandoan/social/internal/store"
 	"github.com/sangtandoan/social/internal/utils"
 	"go.uber.org/zap"
@@ -30,9 +31,11 @@ func main() {
 	defer db.Close()
 	utils.Log.Info("database connected")
 
+	mailer := service.NewSMTPMailer(config.MailerConfig)
+
 	store := store.NewStore(db)
 
-	app := application{config, store}
+	app := application{config, store, mailer}
 
 	mux := app.mount()
 

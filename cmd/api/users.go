@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sangtandoan/social/internal/models/dto"
 	"github.com/sangtandoan/social/internal/models/params"
+	"github.com/sangtandoan/social/internal/service"
 	"github.com/sangtandoan/social/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -75,6 +76,21 @@ func (a *application) createUserHandler(c *gin.Context) {
 		return nil
 	})
 	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	emailReq := service.SendRequest{
+		To: []string{"sanghutao143@gmail.com"},
+		Data: &service.ConfirmData{
+			Username: res.Username,
+			Token:    res.Token,
+		},
+		Temp: service.ConfirmTemplate,
+	}
+	if err := a.mailer.Send(&emailReq); err != nil {
+		// TODO: implement retry mechanic
+		// TODO: implement sasga pattern
 		c.Error(err)
 		return
 	}

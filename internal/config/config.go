@@ -18,10 +18,19 @@ type dbConfig struct {
 	MaxIdleConns int `mapstructure:"DB_MAX_IDLE_CONNS"`
 }
 
-type Config struct {
-	DbConfig *dbConfig
+type MailerConfig struct {
+	Host       string `mapstructure:"MAIL_HOST"`
+	From       string `mapstructure:"MAIL_FROM"`
+	Username   string `mapstructure:"MAIL_USERNAME"`
+	Password   string `mapstructure:"MAIL_PASSWORD"`
+	ServerAddr string `mapstructure:"ADDR"`
+	Port       int    `mapstructure:"MAIL_PORT"`
+}
 
-	Addr string `mapstructure:"ADDR"`
+type Config struct {
+	DbConfig     *dbConfig
+	MailerConfig *MailerConfig
+	Addr         string `mapstructure:"ADDR"`
 }
 
 var cfg Config
@@ -46,7 +55,12 @@ func LoadCfg() *Config {
 		log.Fatal("Can not Unmarshal cfg file!")
 	}
 
-	fmt.Println(dbConfig.User, dbConfig.Password)
+	var mailerConfig MailerConfig
+	err = viper.Unmarshal(&mailerConfig)
+	if err != nil {
+		log.Fatal("Can not Unmarshal cfg file!")
+	}
+
 	dbConfig.Addr = fmt.Sprintf(
 		"postgres://%s:%s@localhost:5432/social?sslmode=disable",
 		dbConfig.User,
@@ -54,6 +68,7 @@ func LoadCfg() *Config {
 	)
 
 	cfg.DbConfig = &dbConfig
+	cfg.MailerConfig = &mailerConfig
 
 	return &cfg
 }
