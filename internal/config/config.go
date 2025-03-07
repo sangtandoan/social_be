@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -18,6 +19,15 @@ type dbConfig struct {
 	MaxIdleConns int `mapstructure:"DB_MAX_IDLE_CONNS"`
 }
 
+type RedisConfig struct {
+	Addr        string        `mapstrucutre:"REDIS_ADDR"`
+	Password    string        `mapstrucutre:"REDIS_PASSWORD"`
+	MaxRetires  int           `mapstrucutre:"REDIS_RETRIES"`  // redis has already implement retry mechanism default = 3, if you want to implement your own, set = 0
+	PoolSize    int           `mapstrucutre:"REDIS_POOLSIZE"` // = maxOpenConns
+	DB          int           `mapstrucutre:"REDIS_DB"`
+	IdleTimeout time.Duration `mapstrucutre:"REDIS_IDLE_TIMEOUT"` // = MaxIdleLifeTime
+}
+
 type MailerConfig struct {
 	Host       string `mapstructure:"MAIL_HOST"`
 	From       string `mapstructure:"MAIL_FROM"`
@@ -30,6 +40,7 @@ type MailerConfig struct {
 type Config struct {
 	DbConfig     *dbConfig
 	MailerConfig *MailerConfig
+	CacheConfig  *RedisConfig
 	Addr         string `mapstructure:"ADDR"`
 }
 
@@ -61,6 +72,12 @@ func LoadCfg() *Config {
 		log.Fatal("Can not Unmarshal cfg file!")
 	}
 
+	var redisConfig RedisConfig
+	err = viper.Unmarshal(&redisConfig)
+	if err != nil {
+		log.Fatal("can not unmarshal cfg file")
+	}
+
 	dbConfig.Addr = fmt.Sprintf(
 		"postgres://%s:%s@localhost:5432/social?sslmode=disable",
 		dbConfig.User,
@@ -69,6 +86,7 @@ func LoadCfg() *Config {
 
 	cfg.DbConfig = &dbConfig
 	cfg.MailerConfig = &mailerConfig
+	cfg.CacheConfig = &redisConfig
 
 	return &cfg
 }

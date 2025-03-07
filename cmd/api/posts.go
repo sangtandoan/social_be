@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sangtandoan/social/internal/models/dto"
+	"github.com/sangtandoan/social/internal/service/cache"
 	"github.com/sangtandoan/social/internal/store"
 	"github.com/sangtandoan/social/internal/utils"
 )
@@ -45,10 +48,33 @@ func (a *application) getPostHandler(c *gin.Context) error {
 		return err
 	}
 
+	cacheKey := fmt.Sprintf("user:%s", c.Param("id"))
+	lockKey := fmt.Sprintf("lock:%s", cacheKey)
+	cacheRespone, err := a.cache.Get(c.Request.Context(), cacheKey)
+	if err == nil {
+		var post store.Post
+		if err := json.Unmarshal([]byte(cacheRespone), &post); err == nil {
+			c.JSON(http.StatusOK, &post)
+			return nil
+		}
+	}
+
+	err = a.cache.SetNX(c.Request.Context(), lockKey, cache.LockValue, cache.ExpirationTime)
+	if err != nil {
+		time.Sleep(100 * time.Millisecond)
+		return a.getPostHandler(c)
+	}
+
+	defer a.cache.Delete(c.Request.Context(), lockKey)
+
+	// Rebuild cache
 	post, err := a.store.Posts.GetByID(c.Request.Context(), int64(id))
 	if err != nil {
 		return err
 	}
+
+	cacheData, _ := json.Marshal(post)
+	a.cache.Set(c.Request.Context(), cacheKey, cacheData, cache.ExpirationTime)
 
 	c.JSON(http.StatusOK, post)
 	return nil

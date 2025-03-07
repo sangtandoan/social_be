@@ -5,6 +5,7 @@ import (
 	"github.com/sangtandoan/social/internal/config"
 	"github.com/sangtandoan/social/internal/db"
 	"github.com/sangtandoan/social/internal/service"
+	"github.com/sangtandoan/social/internal/service/cache"
 	"github.com/sangtandoan/social/internal/store"
 	"github.com/sangtandoan/social/internal/utils"
 	"go.uber.org/zap"
@@ -33,9 +34,12 @@ func main() {
 
 	mailer := service.NewSMTPMailer(config.MailerConfig)
 
+	redisClient := cache.NewRedisClient(config.CacheConfig)
+	cache := cache.NewCacheService(redisClient)
+
 	store := store.NewStore(db)
 
-	app := application{config, store, mailer}
+	app := application{config, store, mailer, cache, nil}
 
 	mux := app.mount()
 
